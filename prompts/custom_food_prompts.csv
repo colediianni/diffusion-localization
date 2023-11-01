@@ -1,0 +1,3 @@
+prompt,classname,classidx
+"a photo of apple pie, a type of food.",apple_pie,0
+"not a photo of apple pie, a type of food.",not_apple_pie,1

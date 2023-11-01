@@ -1,0 +1,4 @@
+prompt,classname,classidx
+a blurry photo of a airplane.,airplane,0
+a blurry photo of an object that's not a airplane.,not_airplane,1
+

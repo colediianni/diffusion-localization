@@ -1,0 +1,44 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "run_cifar_localization",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "args": ["--dataset", "cifar10", 
+                    "--split", "test", 
+                    "--n_trials", "1", 
+                    "--to_keep", "1",
+                    "--n_samples", "200",
+                    "--loss", "all_l2",
+                    "--batch_size", "1",
+                    "--prompt_path", "prompts/cifar10_prompts.csv",
+                    "--localization", "True"
+                ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "run_food_localization",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "args": ["--dataset", "food", 
+                    "--split", "test", 
+                    "--n_trials", "1", 
+                    "--to_keep", "1",
+                    "--n_samples", "10",
+                    "--loss", "all_l2",
+                    "--batch_size", "1",
+                    "--prompt_path", "prompts/food_prompts.csv",
+                    "--localization", "True"
+                ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        }
+    ]
+}
