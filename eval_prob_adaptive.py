@@ -66,6 +66,7 @@ def eval_prob_adaptive(unet, latent, text_embeds, scheduler, args, latent_size=6
         noise_idxs = []
         text_embed_idxs = []
         curr_t_to_eval = t_to_eval[len(t_to_eval) // n_samples // 2::len(t_to_eval) // n_samples][:n_samples]
+        print(curr_t_to_eval)
         curr_t_to_eval = [t for t in curr_t_to_eval if t not in t_evaluated]
         for prompt_i in remaining_prmpt_idxs:
             for t_idx, t in enumerate(curr_t_to_eval, start=len(t_evaluated)):
@@ -138,7 +139,7 @@ def eval_error(unet, scheduler, latent, all_noise, ts, noise_idxs,
                 error = F.l1_loss(noise, noise_pred, reduction='none').mean(dim=(1, 2, 3))
             elif loss == 'huber':
                 error = F.huber_loss(noise, noise_pred, reduction='none').mean(dim=(1, 2, 3))
-            elif loss == "all_l2":
+            elif loss == "all_l1":
                 true_image = convert_latent_to_img(noised_latent, vae, latent.dtype)
                 # error = F.mse_loss(noise, noise_pred, reduction='none')
                 predicted_latent = latent * (scheduler.alphas_cumprod[batch_ts] ** 0.5).view(-1, 1, 1, 1).to(device) + \
@@ -185,7 +186,7 @@ def main():
     parser.add_argument('--n_workers', type=int, default=1, help='Number of workers to split the dataset across')
     parser.add_argument('--worker_idx', type=int, default=0, help='Index of worker to use')
     parser.add_argument('--load_stats', action='store_true', help='Load saved stats to compute acc')
-    parser.add_argument('--loss', type=str, default='l2', choices=('l1', 'l2', 'huber', "all_l2"), help='Type of loss to use')
+    parser.add_argument('--loss', type=str, default='l2', choices=('l1', 'l2', 'huber', "all_l1"), help='Type of loss to use')
 
     # args for adaptively choosing which classes to continue trying
     parser.add_argument('--to_keep', nargs='+', type=int, required=True)
@@ -274,7 +275,7 @@ def main():
                 # print(x0.shape)
                 img = convert_latent_to_img(x0, vae, x0.dtype)
                 plt.imshow(img[0].permute(1, 2, 0).clamp(0, 1))
-                plt.savefig(osp.join(run_folder, str(i) + 'original_img.png'))
+                plt.savefig(osp.join(run_folder, str(i) + '_original_img.png'))
                 # plt.show()
                 plt.close()
                 # stop
@@ -283,9 +284,9 @@ def main():
 
                 diff_img = pred_errors[label]["pred_errors"].mean(dim=0)
                 diff_img = diff_img.permute(1, 2, 0)
-                # print(diff_img.min(), diff_img.max(), diff_img.mean())
+                print(diff_img.min(), diff_img.max(), diff_img.mean())
                 plt.imshow(diff_img.sum(dim=2) / diff_img.max())
-                plt.savefig(osp.join(run_folder, str(i) + 'prediction_diff_img.png'))
+                plt.savefig(osp.join(run_folder, str(i) + 'pos_prediction_diff_img.png'))
                 # plt.show()
                 plt.close()
                 
