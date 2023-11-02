@@ -15,7 +15,7 @@
                     "--to_keep", "1",
                     "--n_samples", "200",
                     "--loss", "all_l1",
-                    "--batch_size", "1",
+                    "--batch_size", "8",
                     "--prompt_path", "prompts/custom_cifar10_prompts.csv",
                     "--localization", "True"
                 ],
@@ -33,7 +33,7 @@
                     "--to_keep", "1",
                     "--n_samples", "2",
                     "--loss", "all_l1",
-                    "--batch_size", "1",
+                    "--batch_size", "8",
                     "--prompt_path", "prompts/custom_cifar10_prompts.csv",
                     "--localization", "True"
                 ],
@@ -49,10 +49,10 @@
                     "--split", "test", 
                     "--n_trials", "1", 
                     "--to_keep", "1",
-                    "--n_samples", "10",
+                    "--n_samples", "100",
                     "--loss", "all_l1",
-                    "--batch_size", "1",
-                    "--prompt_path", "prompts/food_prompts.csv",
+                    "--batch_size", "8",
+                    "--prompt_path", "prompts/custom_food_prompts.csv",
                     "--localization", "True"
                 ],
             "console": "integratedTerminal",

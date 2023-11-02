@@ -66,7 +66,7 @@ def eval_prob_adaptive(unet, latent, text_embeds, scheduler, args, latent_size=6
         noise_idxs = []
         text_embed_idxs = []
         curr_t_to_eval = t_to_eval[len(t_to_eval) // n_samples // 2::len(t_to_eval) // n_samples][:n_samples]
-        print(curr_t_to_eval)
+        # print(curr_t_to_eval)
         curr_t_to_eval = [t for t in curr_t_to_eval if t not in t_evaluated]
         for prompt_i in remaining_prmpt_idxs:
             for t_idx, t in enumerate(curr_t_to_eval, start=len(t_evaluated)):
@@ -186,7 +186,7 @@ def main():
     parser.add_argument('--n_workers', type=int, default=1, help='Number of workers to split the dataset across')
     parser.add_argument('--worker_idx', type=int, default=0, help='Index of worker to use')
     parser.add_argument('--load_stats', action='store_true', help='Load saved stats to compute acc')
-    parser.add_argument('--loss', type=str, default='l2', choices=('l1', 'l2', 'huber', "all_l1"), help='Type of loss to use')
+    parser.add_argument('--loss', type=str, default='l2', choices=('l1', 'l2', 'huber', "all_l1", "all_l2"), help='Type of loss to use')
 
     # args for adaptively choosing which classes to continue trying
     parser.add_argument('--to_keep', nargs='+', type=int, required=True)
@@ -282,39 +282,60 @@ def main():
 
                 pred_idx, pred_errors = eval_prob_adaptive(unet, x0, text_embeddings, scheduler, args, latent_size, all_noise, vae=vae)
 
-                diff_img = pred_errors[label]["pred_errors"].mean(dim=0)
-                diff_img = diff_img.permute(1, 2, 0)
-                print(diff_img.min(), diff_img.max(), diff_img.mean())
-                plt.imshow(diff_img.sum(dim=2) / diff_img.max())
-                plt.savefig(osp.join(run_folder, str(i) + 'pos_prediction_diff_img.png'))
-                # plt.show()
-                plt.close()
-                
-
-                all_other_images = []
-                labels = list(pred_errors.keys())
-                for j in labels:
-                    if j == label:
-                        continue
-                    neg_diff_img = pred_errors[j]["pred_errors"].mean(dim=0).unsqueeze(0)
-                    all_other_images.append(neg_diff_img)
-
-                all_other_images = torch.mean(torch.stack(all_other_images), dim=0)[0]
-                # plt.imshow(all_other_images[0].permute(1, 2, 0).clamp(0, 1))
-                # plt.show()
-
-                neg_diff_img = all_other_images.permute(1, 2, 0)
-                plt.imshow(neg_diff_img.sum(dim=2) / neg_diff_img.max())
-                plt.savefig(osp.join(run_folder, str(i) + 'neg_prediction_diff_img.png'))
-                # plt.show()
-                plt.close()
-
-                total_diff = (neg_diff_img - diff_img).sum(dim=2)
+                total_diff = 0
+                for j in range(len(pred_errors[label]["pred_errors"])):
+                    pos_prediction = pred_errors[label]["pred_errors"][j]
+                    labels = list(pred_errors.keys())
+                    for k in labels:
+                        if k == label:
+                            continue
+                        neg_prediction = pred_errors[k]["pred_errors"][j]
+                        if torch.sum(pos_prediction) < torch.sum(neg_prediction):
+                            total_diff = total_diff + torch.abs(neg_prediction - pos_prediction) # to visualize the pixels contributing most to classificaion
+                            # total_diff = total_diff + (neg_prediction - pos_prediction) # to visualize the pixels positively contributing
+                if isinstance(total_diff, int):
+                    continue
+                total_diff = total_diff.permute(1, 2, 0).sum(dim=2)
                 total_diff = total_diff + total_diff.min()
                 plt.imshow(total_diff / total_diff.max())
                 plt.savefig(osp.join(run_folder, str(i) + 'total_localization_img.png'))
-                # plt.show()
+                # # plt.show()
                 plt.close()
+
+                # OLD CODE (MIGHT REMOVE)
+                # diff_img = pred_errors[label]["pred_errors"].mean(dim=0)
+                # diff_img = diff_img.permute(1, 2, 0)
+                # print(diff_img.min(), diff_img.max(), diff_img.mean())
+                # plt.imshow(diff_img.sum(dim=2) / diff_img.max())
+                # plt.savefig(osp.join(run_folder, str(i) + 'pos_prediction_diff_img.png'))
+                # # plt.show()
+                # plt.close()
+                
+
+                # all_other_images = []
+                # labels = list(pred_errors.keys())
+                # for j in labels:
+                #     if j == label:
+                #         continue
+                #     neg_diff_img = pred_errors[j]["pred_errors"].mean(dim=0).unsqueeze(0)
+                #     all_other_images.append(neg_diff_img)
+
+                # all_other_images = torch.mean(torch.stack(all_other_images), dim=0)[0]
+                # # plt.imshow(all_other_images[0].permute(1, 2, 0).clamp(0, 1))
+                # # plt.show()
+
+                # neg_diff_img = all_other_images.permute(1, 2, 0)
+                # plt.imshow(neg_diff_img.sum(dim=2) / neg_diff_img.max())
+                # plt.savefig(osp.join(run_folder, str(i) + 'neg_prediction_diff_img.png'))
+                # # plt.show()
+                # plt.close()
+
+                # total_diff = (neg_diff_img - diff_img).sum(dim=2)
+                # total_diff = total_diff + total_diff.min()
+                # plt.imshow(total_diff / total_diff.max())
+                # plt.savefig(osp.join(run_folder, str(i) + 'total_localization_img.png'))
+                # # plt.show()
+                # plt.close()
 
 
     else:
