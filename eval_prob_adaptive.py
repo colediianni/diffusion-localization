@@ -194,7 +194,7 @@ def main():
 
 
     parser.add_argument('--localization', type=bool, default=False, help='Whether to do classification or class localization')
-
+    parser.add_argument('--test_file_path', type=str, default="", required=True, help='Path to image file to run localization on')
 
     args = parser.parse_args()
     assert len(args.to_keep) == len(args.n_samples)
@@ -215,6 +215,12 @@ def main():
         run_folder = osp.join(LOG_DIR, args.dataset + '_' + args.extra, name)
     else:
         run_folder = osp.join(LOG_DIR, args.dataset, name)
+    if args.test_file_path != "":
+        if args.extra is not None:
+            run_folder = osp.join(LOG_DIR, 'custom_img_' + args.extra, name)
+        else:
+            run_folder = osp.join(LOG_DIR, 'custom_img', name)
+
     os.makedirs(run_folder, exist_ok=True)
     print(f'Run folder: {run_folder}')
 
@@ -222,7 +228,13 @@ def main():
     interpolation = INTERPOLATIONS[args.interpolation]
     transform = get_transform(interpolation, args.img_size)
     latent_size = args.img_size // 8
-    target_dataset = get_target_dataset(args.dataset, train=args.split == 'train', transform=transform)
+    if args.test_file_path != "":
+        from PIL import Image 
+        img = Image.open(args.test_file_path) 
+        img = transform(img)
+        target_dataset = [[img, 0]]
+    else:
+        target_dataset = get_target_dataset(args.dataset, train=args.split == 'train', transform=transform)
     prompts_df = pd.read_csv(args.prompt_path)
 
     # load pretrained models
@@ -257,8 +269,8 @@ def main():
     assert len(text_embeddings) == len(prompts_df)
 
     if args.localization:
-        idxs_to_eval = list(range(10000))
-        # idxs_to_eval = list(range(len(target_dataset)))
+        # idxs_to_eval = list(range(10000))
+        idxs_to_eval = list(range(len(target_dataset)))
         pbar = tqdm.tqdm(idxs_to_eval)
         for i in pbar:
             image, label = target_dataset[i]
@@ -290,9 +302,9 @@ def main():
                         if k == label:
                             continue
                         neg_prediction = pred_errors[k]["pred_errors"][j]
-                        if torch.sum(pos_prediction) < torch.sum(neg_prediction):
-                            total_diff = total_diff + torch.abs(neg_prediction - pos_prediction) # to visualize the pixels contributing most to classificaion
-                            # total_diff = total_diff + (neg_prediction - pos_prediction) # to visualize the pixels positively contributing
+                        # if torch.sum(pos_prediction) < torch.sum(neg_prediction): # only consider the data point if it is positively contributing to the correct class's prediction
+                        total_diff = total_diff + torch.abs(neg_prediction - pos_prediction) # to visualize the pixels contributing most to classificaion
+                        # total_diff = total_diff + (neg_prediction - pos_prediction) # to visualize the pixels positively contributing
                 if isinstance(total_diff, int):
                     continue
                 total_diff = total_diff.permute(1, 2, 0).sum(dim=2)
