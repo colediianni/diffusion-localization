@@ -107,15 +107,6 @@ def eval_error(unet, scheduler, latent, all_noise, ts, noise_idxs,
         pred_errors = None
     idx = 0
 
-    # with torch.no_grad():
-    #     img = vae.decode(latent/0.18215).sample
-    #     img = img.mul_(0.5).add_(0.5).clamp(0, 1).type(torch.DoubleTensor)
-    #     print(img.shape)
-    #     print(img.min(), img.max())
-    #     plt.imshow(img.detach().cpu()[0].permute(1, 2, 0))
-    #     plt.show()
-
-
     with torch.inference_mode():
         for _ in tqdm.trange(len(ts) // batch_size + int(len(ts) % batch_size != 0), leave=False):
             batch_ts = torch.tensor(ts[idx: idx + batch_size])
@@ -313,42 +304,6 @@ def main():
                 plt.savefig(osp.join(run_folder, str(i) + 'total_localization_img.png'))
                 # # plt.show()
                 plt.close()
-
-                # OLD CODE (MIGHT REMOVE)
-                # diff_img = pred_errors[label]["pred_errors"].mean(dim=0)
-                # diff_img = diff_img.permute(1, 2, 0)
-                # print(diff_img.min(), diff_img.max(), diff_img.mean())
-                # plt.imshow(diff_img.sum(dim=2) / diff_img.max())
-                # plt.savefig(osp.join(run_folder, str(i) + 'pos_prediction_diff_img.png'))
-                # # plt.show()
-                # plt.close()
-                
-
-                # all_other_images = []
-                # labels = list(pred_errors.keys())
-                # for j in labels:
-                #     if j == label:
-                #         continue
-                #     neg_diff_img = pred_errors[j]["pred_errors"].mean(dim=0).unsqueeze(0)
-                #     all_other_images.append(neg_diff_img)
-
-                # all_other_images = torch.mean(torch.stack(all_other_images), dim=0)[0]
-                # # plt.imshow(all_other_images[0].permute(1, 2, 0).clamp(0, 1))
-                # # plt.show()
-
-                # neg_diff_img = all_other_images.permute(1, 2, 0)
-                # plt.imshow(neg_diff_img.sum(dim=2) / neg_diff_img.max())
-                # plt.savefig(osp.join(run_folder, str(i) + 'neg_prediction_diff_img.png'))
-                # # plt.show()
-                # plt.close()
-
-                # total_diff = (neg_diff_img - diff_img).sum(dim=2)
-                # total_diff = total_diff + total_diff.min()
-                # plt.imshow(total_diff / total_diff.max())
-                # plt.savefig(osp.join(run_folder, str(i) + 'total_localization_img.png'))
-                # # plt.show()
-                # plt.close()
-
 
     else:
         # subset of dataset to evaluate
