@@ -8,7 +8,7 @@
             "name": "run_cifar_localization",
             "type": "python",
             "request": "launch",
-            "program": "${file}",
+            "program": "eval_prob_adaptive.py",
             "args": ["--dataset", "cifar10", 
                     "--split", "test", 
                     "--n_trials", "1", 
@@ -17,26 +17,8 @@
                     "--loss", "all_l1",
                     "--batch_size", "8",
                     "--prompt_path", "prompts/custom_cifar10_prompts.csv",
+                    "--extra", "pos",
                     "--localization", "True",
-                    "--extra", "curr_best"
-                ],
-            "console": "integratedTerminal",
-            "justMyCode": true
-        },
-        {
-            "name": "testing_cifar_localization",
-            "type": "python",
-            "request": "launch",
-            "program": "${file}",
-            "args": ["--dataset", "cifar10", 
-                    "--split", "test", 
-                    "--n_trials", "1", 
-                    "--to_keep", "1",
-                    "--n_samples", "2",
-                    "--loss", "all_l1",
-                    "--batch_size", "8",
-                    "--prompt_path", "prompts/custom_cifar10_prompts.csv",
-                    "--localization", "True"
                 ],
             "console": "integratedTerminal",
             "justMyCode": true
@@ -45,7 +27,7 @@
             "name": "run_food_localization",
             "type": "python",
             "request": "launch",
-            "program": "${file}",
+            "program": "eval_prob_adaptive.py",
             "args": ["--dataset", "food", 
                     "--split", "test", 
                     "--n_trials", "1", 
@@ -64,7 +46,7 @@
             "name": "run_custom_image_localization",
             "type": "python",
             "request": "launch",
-            "program": "${file}",
+            "program": "eval_prob_adaptive.py",
             "args": ["--dataset", "food", 
                     "--split", "test", 
                     "--n_trials", "1", 
@@ -74,8 +56,8 @@
                     "--batch_size", "8",
                     "--prompt_path", "prompts/custom_image_prompts.csv",
                     "--localization", "True",
-                    "--extra", "curr_best_instruments_test",
-                    "--test_file_path", "C:\\Users\\Cole\\Desktop\\diffusion-localization\\custom_images\\instruments.jpg"
+                    "--extra", "diff_city_taxi",
+                    "--test_file_path", "C:\\Users\\Cole\\Desktop\\diffusion-localization\\custom_images\\busy_street.jpg"
                 ],
             "console": "integratedTerminal",
             "justMyCode": true

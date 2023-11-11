@@ -185,7 +185,7 @@ def main():
 
 
     parser.add_argument('--localization', type=bool, default=False, help='Whether to do classification or class localization')
-    parser.add_argument('--test_file_path', type=str, default="", required=True, help='Path to image file to run localization on')
+    parser.add_argument('--test_file_path', type=str, default="", required=False, help='Path to image file to run localization on')
 
     args = parser.parse_args()
     assert len(args.to_keep) == len(args.n_samples)
@@ -285,7 +285,7 @@ def main():
 
                 pred_idx, pred_errors = eval_prob_adaptive(unet, x0, text_embeddings, scheduler, args, latent_size, all_noise, vae=vae)
 
-                total_diff = 0
+                total_diff = []
                 for j in range(len(pred_errors[label]["pred_errors"])):
                     pos_prediction = pred_errors[label]["pred_errors"][j]
                     labels = list(pred_errors.keys())
@@ -294,14 +294,17 @@ def main():
                             continue
                         neg_prediction = pred_errors[k]["pred_errors"][j]
                         # if torch.sum(pos_prediction) < torch.sum(neg_prediction): # only consider the data point if it is positively contributing to the correct class's prediction
-                        total_diff = total_diff + torch.abs(neg_prediction - pos_prediction) # to visualize the pixels contributing most to classificaion
-                        # total_diff = total_diff + (neg_prediction - pos_prediction) # to visualize the pixels positively contributing
-                if isinstance(total_diff, int):
+                        # total_diff.append(neg_prediction - pos_prediction) # to visualize the pixels positively contributing
+                        total_diff.append(torch.nn.ReLU()(neg_prediction - pos_prediction)) # to visualize the pixels positively contributing
+                        # total_diff.append(torch.abs(neg_prediction - pos_prediction)) # to visualize the pixels contributing most to classificaion
+                if len(total_diff) == 0:
                     continue
+                total_diff = torch.mean(torch.stack(total_diff), dim=0)
                 total_diff = total_diff.permute(1, 2, 0).sum(dim=2)
-                total_diff = total_diff + total_diff.min()
-                plt.imshow(total_diff / total_diff.max())
-                plt.savefig(osp.join(run_folder, str(i) + 'total_localization_img.png'))
+                # total_diff = total_diff + total_diff.min()
+                plt.imshow(total_diff)
+                plt.colorbar()
+                plt.savefig(osp.join(run_folder, f'{i}_{float(torch.sum(total_diff))}_total_localization_img.png'))
                 # # plt.show()
                 plt.close()
 
