@@ -56,8 +56,8 @@
                     "--batch_size", "8",
                     "--prompt_path", "prompts/custom_image_prompts.csv",
                     "--localization", "True",
-                    "--extra", "diff_city_taxi",
-                    "--test_file_path", "C:\\Users\\Cole\\Desktop\\diffusion-localization\\custom_images\\busy_street.jpg"
+                    "--extra", "instuments_all_labels",
+                    "--test_file_path", "C:\\Users\\Cole\\Desktop\\diffusion-localization\\custom_images\\instruments.jpg"
                 ],
             "console": "integratedTerminal",
             "justMyCode": true

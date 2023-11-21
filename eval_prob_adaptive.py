@@ -275,38 +275,55 @@ def main():
                 x0 = vae.encode(img_input).latent_dist.mean
                 x0 *= 0.18215
 
-                # print(x0.shape)
-                img = convert_latent_to_img(x0, vae, x0.dtype)
-                plt.imshow(img[0].permute(1, 2, 0).clamp(0, 1))
-                plt.savefig(osp.join(run_folder, str(i) + '_original_img.png'))
-                # plt.show()
-                plt.close()
-                # stop
+                # # print(x0.shape)
+                # img = convert_latent_to_img(x0, vae, x0.dtype)
+                # plt.imshow(img[0].permute(1, 2, 0).clamp(0, 1))
+                # plt.savefig(osp.join(run_folder, str(i) + '_original_img.png'))
+                # # plt.show()
+                # plt.close()
+                # # stop
 
                 pred_idx, pred_errors = eval_prob_adaptive(unet, x0, text_embeddings, scheduler, args, latent_size, all_noise, vae=vae)
 
-                total_diff = []
-                for j in range(len(pred_errors[label]["pred_errors"])):
-                    pos_prediction = pred_errors[label]["pred_errors"][j]
-                    labels = list(pred_errors.keys())
-                    for k in labels:
-                        if k == label:
-                            continue
-                        neg_prediction = pred_errors[k]["pred_errors"][j]
-                        # if torch.sum(pos_prediction) < torch.sum(neg_prediction): # only consider the data point if it is positively contributing to the correct class's prediction
-                        # total_diff.append(neg_prediction - pos_prediction) # to visualize the pixels positively contributing
-                        total_diff.append(torch.nn.ReLU()(neg_prediction - pos_prediction)) # to visualize the pixels positively contributing
-                        # total_diff.append(torch.abs(neg_prediction - pos_prediction)) # to visualize the pixels contributing most to classificaion
-                if len(total_diff) == 0:
-                    continue
-                total_diff = torch.mean(torch.stack(total_diff), dim=0)
-                total_diff = total_diff.permute(1, 2, 0).sum(dim=2)
-                # total_diff = total_diff + total_diff.min()
-                plt.imshow(total_diff)
-                plt.colorbar()
-                plt.savefig(osp.join(run_folder, f'{i}_{float(torch.sum(total_diff))}_total_localization_img.png'))
-                # # plt.show()
-                plt.close()
+                labels = list(pred_errors.keys())
+                for k in labels:
+                    prediction = torch.mean(pred_errors[k]["pred_errors"], dim=0)
+                    # if torch.sum(pos_prediction) < torch.sum(neg_prediction): # only consider the data point if it is positively contributing to the correct class's prediction
+                    # total_diff.append(neg_prediction - pos_prediction) # to visualize the pixels positively contributing
+                    # total_diffs.append(prediction) # to visualize the pixels positively contributing
+                    # total_diff.append(torch.abs(neg_prediction - pos_prediction)) # to visualize the pixels contributing most to classificaion
+
+                    torch.save(prediction, osp.join(run_folder, f'{k}.pt'))
+
+                    total_diff = prediction.permute(1, 2, 0).sum(dim=2)
+                    # total_diff = total_diff + total_diff.min()
+                    plt.imshow(total_diff)
+                    plt.colorbar()
+                    # plt.savefig(osp.join(run_folder, f'{i}_{float(torch.sum(total_diff))}_total_localization_img.png'))
+                    plt.show()
+                    plt.close()
+
+                # rel = torch.nn.ReLU()
+                # total_diff = []
+                # for j in range(len(pred_errors[label]["pred_errors"])):
+                #     pos_prediction = pred_errors[label]["pred_errors"][j]
+
+                #     neg_prediction = pred_errors[1]["pred_errors"][j]
+
+                #     null_prediction = pred_errors[2]["pred_errors"][j]
+                #     # if torch.sum(pos_prediction) < torch.sum(neg_prediction): # only consider the data point if it is positively contributing to the correct class's prediction
+                #     # total_diff.append(neg_prediction - pos_prediction) # to visualize the pixels positively contributing
+                #     total_diff.append(rel(rel(neg_prediction - pos_prediction) - rel(neg_prediction - null_prediction))) # to visualize the pixels positively contributing
+                #     # total_diff.append(torch.abs(neg_prediction - pos_prediction)) # to visualize the pixels contributing most to classificaion
+
+                # total_diff = torch.mean(torch.stack(total_diff), dim=0)
+                # total_diff = total_diff.permute(1, 2, 0).sum(dim=2)
+                # # total_diff = total_diff + total_diff.min()
+                # plt.imshow(total_diff)
+                # plt.colorbar()
+                # plt.savefig(osp.join(run_folder, f'{i}_{float(torch.sum(total_diff))}_total_localization_img.png'))
+                # # # plt.show()
+                # plt.close()
 
     else:
         # subset of dataset to evaluate
